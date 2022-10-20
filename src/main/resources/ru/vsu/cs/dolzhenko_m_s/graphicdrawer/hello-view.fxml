@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ListView?>
+<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ru.vsu.cs.dolzhenko_m_s.graphicdrawer.HelloController"
+>
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <Canvas fx:id="drawingCanvas" width="800" height="500" onScroll="#onScroll" onMouseDragged="#onMouseDragged"
+            onMousePressed="#onMousePressed"/>
+
+
+    <ListView orientation="HORIZONTAL" minWidth="100">
+
+        <TextField fx:id="functionField" minWidth="100"/>
+        <Button fx:id="executeFunctionButton" minWidth="30" text="Выполнить" onAction="#computeFunction"/>
+    </ListView>
+
+</VBox>
