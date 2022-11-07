@@ -149,7 +149,7 @@ public class MatchParser implements Function {
                     acc*=right.acc;
                     break;
                 case '/':
-                    if (right.acc == 0)
+                    if (right.acc <= 0.0000000001 && right.acc >= -0.0000000001)
                         throw new Exception();
                     acc/=right.acc;
                     break;
@@ -291,6 +291,8 @@ public class MatchParser implements Function {
                 if(r.acc <= 0)
                     throw new Exception();
                 return new Result(Math.log10(r.acc), r.rest);
+            case "exp":
+                return new Result(Math.exp(r.acc), r.rest);
             case "sqrt":
                 if(r.acc < 0)
                     throw new Exception();

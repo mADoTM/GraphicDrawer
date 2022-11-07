@@ -1,8 +1,8 @@
 package ru.vsu.cs.dolzhenko_m_s.graphicdrawer.domain;
 
 public class ScreenConverter {
-    private double centerX;
-    private double centerY;
+    private double cornerX;
+    private double cornerY;
     private double realWidth;
     private double realHeight;
 
@@ -10,8 +10,8 @@ public class ScreenConverter {
     private int screenHeight;
 
     public ScreenConverter(double centerX, double centerY, double realWidth, double realHeight, int screenWidth, int screenHeight) {
-        this.centerX = centerX;
-        this.centerY = centerY;
+        this.cornerX = centerX;
+        this.cornerY = centerY;
         this.realWidth = realWidth;
         this.realHeight = realHeight;
         this.screenWidth = screenWidth;
@@ -19,27 +19,31 @@ public class ScreenConverter {
     }
 
     public void changeScale(double scale) {
-        realWidth *= scale;
-        realHeight *= scale;
+        realWidth = scale;
+        realHeight = scale;
     }
 
     public ScreenPoint realPointToScreen(RealPoint realPoint) {
-        double x = (realPoint.getX() - centerX) / realWidth * screenWidth;
-        double y = (centerY - realPoint.getY()) / realHeight * screenHeight;
+        double x = (realPoint.getX() - cornerX) / realWidth * screenWidth;
+        double y = (cornerY - realPoint.getY()) / realHeight * screenHeight;
 
         return new ScreenPoint((int) x, (int) y);
     }
 
     public RealPoint screenPointToReal(ScreenPoint screenPoint) {
-        double x = centerX + screenPoint.getX() * realWidth / screenWidth;
-        double y = centerY - screenPoint.getY() * realHeight / screenHeight;
+        double x = cornerX + screenPoint.getX() * realWidth / screenWidth;
+        double y = cornerY - screenPoint.getY() * realHeight / screenHeight;
 
         return new RealPoint(x, y);
     }
 
     public void moveCorner(RealPoint delta) {
-        centerY += delta.getY();
-        centerX += delta.getX();
+        cornerY += delta.getY();
+        cornerX += delta.getX();
+    }
+
+    public double getRealXFromScreen(double x) {
+        return cornerX + x * realWidth / screenWidth;
     }
 
     public void setScreenWidth(int screenWidth) {
@@ -59,10 +63,10 @@ public class ScreenConverter {
     }
 
     public double getCenterX() {
-        return centerX;
+        return cornerX;
     }
 
     public double getCenterY() {
-        return centerY;
+        return cornerY;
     }
 }

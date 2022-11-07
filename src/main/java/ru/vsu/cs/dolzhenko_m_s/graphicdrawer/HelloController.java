@@ -10,6 +10,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import ru.vsu.cs.dolzhenko_m_s.graphicdrawer.domain.*;
 
+import java.math.BigDecimal;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -28,15 +29,11 @@ public class HelloController implements Initializable {
 
     private GraphicsContext graphicsContext;
 
-    private final double SCALE_STEP = 0.001;
-
-    private double DASHES_STEP = 0.1;
-
     private int currentScroll = 0;
 
-    private double border = 10 * Math.pow(2, currentScroll);
-
     private double delta = 0;
+
+    private double scale = 1;
 
     private Function function;
 
@@ -50,15 +47,9 @@ public class HelloController implements Initializable {
     private void onScroll(ScrollEvent e) {
         int clicks = -(int) e.getTextDeltaY() / 2;
         currentScroll += clicks;
-        border *= Math.pow(2, clicks);
-        double coefficient = 1 + SCALE_STEP * (clicks < 0 ? 1 : -1);
-        double scale = 1;
-
-        for (int i = Math.abs(clicks); i > 0; i--) {
-            scale *= coefficient;
-        }
-
+        scale = getScale();
         screenConverter.changeScale(scale);
+        //screenConverter.moveCorner(new RealPoint(0,0));
 
         repaint();
     }
@@ -91,10 +82,11 @@ public class HelloController implements Initializable {
         screenConverter.setScreenWidth(WIDTH);
         graphicsContext.clearRect(0, 0, WIDTH, HEIGHT);
 
-        drawTopics(graphicsContext);
+        //scale = getScale();
+
         drawDashes(graphicsContext);
 
-        if(function != null)
+        if (function != null)
             drawFunction(graphicsContext);
 
         drawAsixs(graphicsContext);
@@ -102,83 +94,71 @@ public class HelloController implements Initializable {
 
     private void drawAsixs(GraphicsContext graphicsContext) {
         Line oX = new Line(new RealPoint(-1 - delta, 0), new RealPoint(1 + delta, 0));
-        Line oY = new Line(new RealPoint(0, -1  - delta), new RealPoint(0, 1 + delta));
+        Line oY = new Line(new RealPoint(0, -1 - delta), new RealPoint(0, 1 + delta));
         drawLine(graphicsContext, oX);
         drawLine(graphicsContext, oY);
     }
 
     private void drawFunction(GraphicsContext graphicsContext) {
         RealPoint prev = null;
-        for (double i = -1 * border * Math.pow(2, Math.abs(currentScroll)) - delta; i < Math.pow(2, Math.abs(currentScroll)) * border + delta; i += DASHES_STEP * 0.5) {
+        for (double i = 0; i <= WIDTH; i += 0.5) {
             double realY = 0;
             try {
-                realY = function.compute(i);
+                double realX = screenConverter.getRealXFromScreen(i);
+                realY = function.compute(realX);
+                var current = new RealPoint(realX, realY);
+                if (prev != null)
+                    drawLine(graphicsContext, new Line(prev, current));
+                prev = current;
             } catch (Exception e) {
-                System.out.println("exception thrown");
+                System.out.println("exception thrown" + " formula =  " + functionField.getText() + " x is " + i);
                 prev = null;
-                continue;
             }
-            var current = new RealPoint(i / border, realY / border);
-            if (prev != null)
-                drawLine(graphicsContext, new Line(prev, current));
-            prev = current;
         }
     }
 
     private void drawDashes(GraphicsContext graphicsContext) {
-
-        for (double i = -1 * border * Math.pow(2, Math.abs(currentScroll)) - delta; i < 1 * border * Math.pow(2, Math.abs(currentScroll)) + delta; i += Math.pow(2, currentScroll)) {
-            RealPoint upX = new RealPoint(i / border, 0 + 0.02);
-            RealPoint downX = new RealPoint(i / border, 0 - 0.02);
+        for (BigDecimal i = new BigDecimal(0); i.compareTo(BigDecimal.valueOf(screenConverter.getRealWidth() / 2 + delta)) <= 0; i = i.add(BigDecimal.valueOf(screenConverter.getRealWidth() / 20))) {
+            RealPoint upX = new RealPoint(i.doubleValue(), 0 + 0.02);
+            RealPoint downX = new RealPoint(i.doubleValue(), 0 - 0.02);
             drawLine(graphicsContext, new Line(upX, downX));
 
-            RealPoint textXpoint = new RealPoint(i / border, 0 - 0.04);
+            RealPoint textXpoint = new RealPoint(i.doubleValue(), 0 - 0.04);
             var screenPointX = screenConverter.realPointToScreen(textXpoint);
             graphicsContext.fillText("" + i, screenPointX.getX(), screenPointX.getY());
 
 
-            RealPoint upY = new RealPoint(0 + 0.02, i / border);
-            RealPoint downY = new RealPoint(0 - 0.02, i / border);
+            RealPoint upY = new RealPoint(0 + 0.02, i.doubleValue());
+            RealPoint downY = new RealPoint(0 - 0.02, i.doubleValue());
             drawLine(graphicsContext, new Line(upY, downY));
 
-            if (i != 0) {
-                RealPoint textYpoint = new RealPoint(0 + 0.04, i / border);
+            if (i.doubleValue() != 0) {
+                RealPoint textYpoint = new RealPoint(0 + 0.04, i.doubleValue());
                 var screenPointY = screenConverter.realPointToScreen(textYpoint);
                 graphicsContext.fillText("" + i, screenPointY.getX(), screenPointY.getY());
             }
         }
 
-    }
+        for (BigDecimal i = BigDecimal.valueOf(-1 * screenConverter.getRealWidth() / 20); i.compareTo(BigDecimal.valueOf(-1 * screenConverter.getRealWidth() / 2 - delta)) >= 0; i = i.add(BigDecimal.valueOf(-1 * screenConverter.getRealWidth() / 20))) {
+            RealPoint upX = new RealPoint(i.doubleValue(), 0 + 0.02);
+            RealPoint downX = new RealPoint(i.doubleValue(), 0 - 0.02);
+            drawLine(graphicsContext, new Line(upX, downX));
+
+            RealPoint textXpoint = new RealPoint(i.doubleValue(), 0 - 0.04);
+            var screenPointX = screenConverter.realPointToScreen(textXpoint);
+            graphicsContext.fillText("" + i, screenPointX.getX(), screenPointX.getY());
 
 
-    private void drawArrows(GraphicsContext graphicsContext) {
-        RealPoint cornerA = new RealPoint(0, screenConverter.getRealHeight());
-        RealPoint leftPartA = new RealPoint(0 - 0.01, screenConverter.getRealHeight() - 0.03);
-        RealPoint rightPartA = new RealPoint(0 + 0.01, screenConverter.getRealHeight() - 0.03);
-        Line line1 = new Line(cornerA, leftPartA);
-        Line line2 = new Line(cornerA, rightPartA);
-        drawLine(graphicsContext, line1);
-        drawLine(graphicsContext, line2);
+            RealPoint upY = new RealPoint(0 + 0.02, i.doubleValue());
+            RealPoint downY = new RealPoint(0 - 0.02, i.doubleValue());
+            drawLine(graphicsContext, new Line(upY, downY));
 
-
-        RealPoint cornerB = new RealPoint(screenConverter.getRealWidth(), 0);
-        RealPoint upperPartB = new RealPoint(screenConverter.getRealWidth() - 0.03, 0 + 0.01);
-        RealPoint downPartB = new RealPoint(screenConverter.getRealWidth() - 0.03, 0 - 0.01);
-        Line line3 = new Line(cornerB, upperPartB);
-        Line line4 = new Line(cornerB, downPartB);
-        drawLine(graphicsContext, line3);
-        drawLine(graphicsContext, line4);
-    }
-
-    private void drawTopics(GraphicsContext g) {
-        RealPoint topicX = new RealPoint(1 - 0.05, 0 - 0.05);
-        RealPoint topicY = new RealPoint(0 + 0.05, 1 - 0.05);
-
-        var screenX = screenConverter.realPointToScreen(topicX);
-        var screenY = screenConverter.realPointToScreen(topicY);
-
-        g.fillText("x", screenX.getX(), screenX.getY());
-        g.fillText("y", screenY.getX(), screenY.getY());
+            if (i.doubleValue() != 0) {
+                RealPoint textYpoint = new RealPoint(0 + 0.04, i.doubleValue());
+                var screenPointY = screenConverter.realPointToScreen(textYpoint);
+                graphicsContext.fillText("" + i, screenPointY.getX(), screenPointY.getY());
+            }
+        }
     }
 
     private void drawLine(GraphicsContext g, Line line) {
@@ -190,9 +170,32 @@ public class HelloController implements Initializable {
 
     @FXML
     private void computeFunction(ActionEvent actionEvent) {
-        if(functionField.getText() != null) {
+        if (functionField.getText() != null) {
             function = new MatchParser(functionField.getText());
             repaint();
         }
+    }
+
+    private double getScale() {
+        int[] scales = new int[]{1,2,5};
+        int clicks = Math.abs(currentScroll);
+
+        double newScale = scales[clicks % 3];
+        double delta = 0.1d;
+
+        if(currentScroll == 0) {
+            return 1;
+        }
+
+        if(currentScroll > 0) {
+            delta = 10;
+        }
+        clicks = clicks / 3;
+        while(clicks > 0) {
+            newScale *= delta;
+            clicks--;
+        }
+
+        return newScale;
     }
 }

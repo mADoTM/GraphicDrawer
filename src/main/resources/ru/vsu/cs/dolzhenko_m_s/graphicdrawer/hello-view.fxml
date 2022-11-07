@@ -18,7 +18,6 @@
 
 
     <ListView orientation="HORIZONTAL" minWidth="100">
-
         <TextField fx:id="functionField" minWidth="100"/>
         <Button fx:id="executeFunctionButton" minWidth="30" text="Выполнить" onAction="#computeFunction"/>
     </ListView>

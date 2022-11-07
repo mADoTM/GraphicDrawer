@@ -7,8 +7,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class HelloApplication extends Application {
-    private final int WIDTH = 800;
-    private final int HEIGHT = 600;
 
     @Override
     public void start(Stage stage) throws IOException {
